@@ -1,116 +1,261 @@
-<script>
-const FIXED_PAIR = ['Г Ярослав О', 'Г Ксения А'];
-
-const SUBJECTS_DATA = {
-    geo: {
-        name: 'География',
-        people: [
-            'А Альфина А.', 'А Милана А', 'А Ева Э', 'А Алексей А', 'Б Дмитрий Д',
-            'В Мирра П', 'Г Ярослав О', 'Г Ксения А', 'Д Иван Д', 'Д Надежда И',
-            'Ж Лаврентий А', 'З Валерия А', 'К Андрей Н', 'Филип О. К', 'К Ярослав Д',
-            'П Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
-            'С Роман С', 'С Федор М', 'Ю Дарья И', 'Я Матвей В'
-        ],
-        fixedPairs: [FIXED_PAIR]
-    }
-};
-
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
-    const peopleSet = new Set(people);
-    const teams = Array.from({ length: teamsCount }, () => []);
-    const remaining = [...people];
-
-    // Обработка фиксированных пар
-    for (const [a, b] of fixedPairs) {
-        if (peopleSet.has(a) && peopleSet.has(b)) {
-            const minTeamIdx = teams.reduce((minIdx, team, idx) =>
-                team.length < teams[minIdx].length ? idx : minIdx, 0);
-            teams[minTeamIdx].push(a, b);
-            const aIndex = remaining.indexOf(a);
-            const bIndex = remaining.indexOf(b);
-            if (aIndex !== -1) remaining.splice(aIndex, 1);
-            if (bIndex !== -1) remaining.splice(bIndex - (aIndex < bIndex ? 1 : 0), 1);
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Разделить класс на команды</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 30px;
+            background: #f9f9fb;
         }
-    }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .team {
+            margin-top: 20px;
+            padding: 16px;
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            border-radius: 0 6px 6px 0;
+        }
+        .error {
+            color: #e74c3c;
+            background: #fdf2f2;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid #e74c3c;
+            margin-top: 15px;
+            display: none;
+        }
+        .info-box {
+            background: #f1f8e9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            color: #2e7d32;
+        }
+        .subject-title {
+            color: #2c3e50;
+            font-weight: bold;
+        }
+        #results { margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Разделить класс на команды</h1>
 
-    // Перемешиваем и распределяем остальных
-    shuffle(remaining);
-    remaining.forEach(person => {
-        const minTeamIdx = teams.reduce((minIdx, team, idx) =>
-            team.length < teams[minIdx].length ? idx : minIdx, 0);
-        teams[minTeamIdx].push(person);
-    });
+        <form id="teamForm">
+            <label for="subject">📚 Предмет:</label>
+            <select id="subject" name="subject" required>
+                <option value="geo">География</option>
+            </select>
 
-    return teams;
-}
+            <label for="teams_count">🔢 Число команд:</label>
+            <input type="number" id="teams_count" name="teams_count" value="3" min="1" required>
 
-function generateTeams(e) {
-    e.preventDefault();
+            <label for="absent">❌ Отсутствующие (через запятую):</label>
+            <input type="text" id="absent" name="absent"
+                   placeholder="Пример: А Алексей А, В Мирра П">
 
-    const subjectKey = document.getElementById('subject').value;
-    const teamsCount = parseInt(document.getElementById('teams_count').value) || 3;
-    const absentInput = document.getElementById('absent').value;
-
-    const subject = SUBJECTS_DATA[subjectKey];
-    if (!subject) {
-        showError("Неизвестный предмет");
-        return;
-    }
-
-    const allPeople = subject.people;
-    const absentList = absentInput.split(',').map(s => s.trim()).filter(s => s);
-    const available = allPeople.filter(p => !absentList.includes(p));
-
-    if (available.length === 0) {
-        showError("Некого делить — все отсутствуют.");
-        return;
-    }
-    if (teamsCount > available.length) {
-        showError(`Нельзя создать ${teamsCount} команд из ${available.length} человек.`);
-        return;
-    }
-
-    const teams = divideIntoTeamsWithPairs(available, teamsCount, subject.fixedPairs);
-    renderTeams(teams, subject.name);
-    hideError();
-}
-
-function renderTeams(teams, subjectName) {
-    const container = document.getElementById('results');
-    container.innerHTML = `
-        <h2>✅ Команды по предмету: <em>${subjectName}</em></h2>
-        ${teams.map((team, i) => `
-            <div class="team">
-                <strong>🔹 Команда ${i + 1} (${team.length}):</strong><br>
-                ${team.join(', ')}
+            <div class="info-box" id="peopleInfo">
+                <span class="subject-title">География:</span>
+                А Альфина А., А Милана А, А Ева Э, А Алексей А, Б Дмитрий Д, В Мирра П, Г Ярослав О, Г Ксения А, Д Иван Д, Д Надежда И, Ж Лаврентий А, З Валерия А, К Андрей Н, Филип О. К, К Ярослав Д, П Дарья И, М Анастасия С, О Павел И, С Александр Ю, С Даниил С, С Роман С, С Федор М, Ю Дарья И, Я Матвей В
             </div>
-        `).join('')}
-    `;
-}
 
-function showError(msg) {
-    document.getElementById('error').textContent = msg;
-    document.getElementById('error').style.display = 'block';
-}
+            <button type="submit">Разделить на команды</button>
+        </form>
 
-function hideError() {
-    document.getElementById('error').style.display = 'none';
-}
+        <div id="error" class="error"></div>
+        <div id="results"></div>
+    </div>
 
-// Автоподгрузка списка людей при смене предмета
-document.getElementById('subject').addEventListener('change', function() {
-    const subject = SUBJECTS_DATA[this.value];
-    document.querySelector('.info-box').innerHTML = `
-        <span class="subject-title">${subject.name}:</span>
-        ${subject.people.join(', ')}
-    `;
-});
-</script>
+    <script>
+        // === Данные ===
+        const FIXED_PAIR = ['Г Ярослав О', 'Г Ксения А'];
+
+        const SUBJECTS_DATA = {
+            geo: {
+                name: 'География',
+                people: [
+                    'А Альфина А.', 'А Милана А', 'А Ева Э', 'А Алексей А', 'Б Дмитрий Д',
+                    'В Мирра П', 'Г Ярослав О', 'Г Ксения А', 'Д Иван Д', 'Д Надежда И',
+                    'Ж Лаврентий А', 'З Валерия А', 'К Андрей Н', 'Филип О. К', 'К Ярослав Д',
+                    'П Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
+                    'С Роман С', 'С Федор М', 'Ю Дарья И', 'Я Матвей В'
+                ],
+                fixedPairs: [FIXED_PAIR]
+            }
+        };
+
+        // === Вспомогательные функции ===
+        function shuffle(array) {
+            // Копируем массив, чтобы не мутировать оригинал
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
+            const peopleSet = new Set(people);
+            const teams = Array.from({ length: teamsCount }, () => []);
+            const remaining = [...people];
+
+            // Обработка фиксированных пар
+            for (const pair of fixedPairs) {
+                const [a, b] = pair;
+                if (peopleSet.has(a) && peopleSet.has(b)) {
+                    // Находим команду с минимальной длиной
+                    const minTeamIdx = teams.reduce((minIdx, team, idx) =>
+                        team.length < teams[minIdx].length ? idx : minIdx, 0);
+                    teams[minTeamIdx].push(a, b);
+                    // Удаляем из remaining
+                    const aIndex = remaining.indexOf(a);
+                    const bIndex = remaining.indexOf(b);
+                    if (aIndex !== -1) remaining.splice(aIndex, 1);
+                    if (bIndex !== -1) remaining.splice(bIndex - (aIndex < bIndex ? 1 : 0), 1);
+                }
+            }
+
+            // Перемешиваем оставшихся и распределяем равномерно
+            const shuffledRemaining = shuffle(remaining);
+            shuffledRemaining.forEach(person => {
+                const minTeamIdx = teams.reduce((minIdx, team, idx) =>
+                    team.length < teams[minIdx].length ? idx : minIdx, 0);
+                teams[minTeamIdx].push(person);
+            });
+
+            return teams;
+        }
+
+        // === Обработчики ===
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = `⚠️ Ошибка: ${message}`;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function renderTeams(teams, subjectName) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h2>✅ Команды по предмету: <em>${subjectName}</em></h2>
+                ${teams.map((team, i) => `
+                    <div class="team">
+                        <strong>🔹 Команда ${i + 1} (${team.length}):</strong><br>
+                        ${team.join(', ')}
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function updatePeopleInfo() {
+            const subjectKey = document.getElementById('subject').value;
+            const subject = SUBJECTS_DATA[subjectKey];
+            const infoBox = document.getElementById('peopleInfo');
+            infoBox.innerHTML = `
+                <span class="subject-title">${subject.name}:</span>
+                ${subject.people.join(', ')}
+            `;
+        }
+
+        document.getElementById('subject').addEventListener('change', updatePeopleInfo);
+
+        document.getElementById('teamForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            hideError();
+
+            const subjectKey = document.getElementById('subject').value;
+            let teamsCount = parseInt(document.getElementById('teams_count').value);
+            const absentInput = document.getElementById('absent').value.trim();
+
+            // Валидация
+            if (isNaN(teamsCount) || teamsCount < 1) {
+                showError('Число команд должно быть целым ≥ 1');
+                return;
+            }
+
+            const subject = SUBJECTS_DATA[subjectKey];
+            if (!subject) {
+                showError('Неизвестный предмет');
+                return;
+            }
+
+            const allPeople = subject.people;
+            const absentList = absentInput ?
+                absentInput.split(',').map(s => s.trim()).filter(s => s) : [];
+
+            const available = allPeople.filter(p => !absentList.includes(p));
+
+            if (available.length === 0) {
+                showError('Некого делить — все отсутствуют.');
+                return;
+            }
+
+            if (teamsCount > available.length) {
+                showError(`Нельзя создать ${teamsCount} команд из ${available.length} человек.`);
+                return;
+            }
+
+            try {
+                const teams = divideIntoTeamsWithPairs(available, teamsCount, subject.fixedPairs);
+                renderTeams(teams, subject.name);
+            } catch (err) {
+                showError('Ошибка при генерации команд: ' + err.message);
+            }
+        });
+
+        // Инициализация (на случай, если форма уже заполнена)
+        updatePeopleInfo();
+    </script>
+</body>
+</html>
