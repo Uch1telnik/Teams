@@ -5,41 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎓 Разделить класс на команды</title>
     <style>
+        :root {
+            /* Светлая тема — значения по умолчанию */
+            --bg-body: #f9f9fb;
+            --bg-container: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #34495e;
+            --border-color: #ddd;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --btn-bg: #3498db;
+            --btn-hover: #2980b9;
+            --team-bg: #e3f2fd;
+            --team-border: #2196f3;
+            --error-bg: #fdf2f2;
+            --error-border: #e74c3c;
+            --error-text: #e74c3c;
+            --info-bg: #f1f8e9;
+            --info-text: #2e7d32;
+            --select-bg: #ffffff;
+        }
+
+        .dark-theme {
+            /* Тёмная тема */
+            --bg-body: #121212;
+            --bg-container: #1e1e1e;
+            --text-primary: #f0f0f0;
+            --text-secondary: #e0e0e0;
+            --border-color: #444;
+            --shadow: 0 4px 12px rgba(0,0,0,0.3);
+            --btn-bg: #1e88e5;
+            --btn-hover: #1565c0;
+            --team-bg: #1e3a5f;
+            --team-border: #4fc3f7;
+            --error-bg: #3d2323;
+            --error-border: #c62828;
+            --error-text: #ef9a9a;
+            --info-bg: #2e3b2a;
+            --info-text: #a5d6a7;
+            --select-bg: #2d2d2d;
+        }
+
+        * {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 30px;
-            background: #f9f9fb;
+            margin: 0;
+            padding: 30px 20px;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
         }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: var(--bg-container);
             padding: 25px;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: var(--shadow);
         }
+
         h1 {
             text-align: center;
-            color: #2c3e50;
+            color: var(--text-primary);
             margin-bottom: 25px;
         }
+
         label {
             display: block;
             margin-top: 20px;
             font-weight: 600;
-            color: #34495e;
+            color: var(--text-secondary);
         }
+
         input, select, textarea {
             width: 100%;
             padding: 10px;
             margin-top: 8px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 16px;
+            background-color: var(--select-bg);
+            color: var(--text-primary);
         }
+
+        input::placeholder {
+            color: #aaa;
+        }
+
         button {
-            background: #3498db;
+            background: var(--btn-bg);
             color: white;
             padding: 12px 24px;
             border: none;
@@ -50,41 +107,84 @@
             margin-top: 20px;
             transition: background 0.3s;
         }
+
         button:hover {
-            background: #2980b9;
+            background: var(--btn-hover);
         }
+
         .team {
             margin-top: 20px;
             padding: 16px;
-            background: #e3f2fd;
-            border-left: 5px solid #2196f3;
+            background: var(--team-bg);
+            border-left: 5px solid var(--team-border);
             border-radius: 0 6px 6px 0;
+            color: var(--text-primary);
         }
+
         .error {
-            color: #e74c3c;
-            background: #fdf2f2;
+            color: var(--error-text);
+            background: var(--error-bg);
             padding: 12px;
             border-radius: 6px;
-            border-left: 4px solid #e74c3c;
+            border-left: 4px solid var(--error-border);
             margin-top: 15px;
             display: none;
         }
+
         .info-box {
-            background: #f1f8e9;
+            background: var(--info-bg);
             padding: 12px;
             border-radius: 6px;
             margin-top: 15px;
             font-size: 0.95em;
-            color: #2e7d32;
+            color: var(--info-text);
         }
+
         .subject-title {
-            color: #2c3e50;
+            color: var(--text-primary);
             font-weight: bold;
         }
-        #results { margin-top: 30px; }
+
+        #results {
+            margin-top: 30px;
+        }
+
+        /* Кнопка переключения темы */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(128, 128, 128, 0.1);
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 600px) {
+            .container { padding: 15px; }
+            h1 { font-size: 1.8rem; }
+        }
     </style>
 </head>
 <body>
+    <!-- Кнопка переключения темы -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
+        🌞
+    </button>
+
     <div class="container">
         <h1>🎓 Разделить класс на команды</h1>
 
@@ -114,7 +214,48 @@
     </div>
 
     <script>
-        // === Данные ===
+        // === Настройка темы ===
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+
+        // Проверяем системную настройку
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Или сохранённую тему
+        const savedTheme = localStorage.getItem('theme');
+        let currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
+
+        // Применяем тему
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-theme');
+                themeToggle.textContent = '🌞';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        applyTheme(currentTheme);
+
+        // Переключение по клику
+        themeToggle.addEventListener('click', () => {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(currentTheme);
+        });
+
+        // Отслеживание системной темы (динамически)
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem('theme')) { // только если пользователь не задал вручную
+                    applyTheme(e.matches ? 'dark' : 'light');
+                }
+            });
+        }
+
+        // === Логика приложения ===
         const FIXED_PAIR = ['Г Ярослав О', 'Г Ксения А'];
 
         const SUBJECTS_DATA = {
@@ -131,9 +272,7 @@
             }
         };
 
-        // === Вспомогательные функции ===
         function shuffle(array) {
-            // Копируем массив, чтобы не мутировать оригинал
             const arr = [...array];
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -147,15 +286,12 @@
             const teams = Array.from({ length: teamsCount }, () => []);
             const remaining = [...people];
 
-            // Обработка фиксированных пар
             for (const pair of fixedPairs) {
                 const [a, b] = pair;
                 if (peopleSet.has(a) && peopleSet.has(b)) {
-                    // Находим команду с минимальной длиной
                     const minTeamIdx = teams.reduce((minIdx, team, idx) =>
                         team.length < teams[minIdx].length ? idx : minIdx, 0);
                     teams[minTeamIdx].push(a, b);
-                    // Удаляем из remaining
                     const aIndex = remaining.indexOf(a);
                     const bIndex = remaining.indexOf(b);
                     if (aIndex !== -1) remaining.splice(aIndex, 1);
@@ -163,7 +299,6 @@
                 }
             }
 
-            // Перемешиваем оставшихся и распределяем равномерно
             const shuffledRemaining = shuffle(remaining);
             shuffledRemaining.forEach(person => {
                 const minTeamIdx = teams.reduce((minIdx, team, idx) =>
@@ -174,7 +309,6 @@
             return teams;
         }
 
-        // === Обработчики ===
         function showError(message) {
             const errorDiv = document.getElementById('error');
             errorDiv.textContent = `⚠️ Ошибка: ${message}`;
@@ -218,7 +352,6 @@
             let teamsCount = parseInt(document.getElementById('teams_count').value);
             const absentInput = document.getElementById('absent').value.trim();
 
-            // Валидация
             if (isNaN(teamsCount) || teamsCount < 1) {
                 showError('Число команд должно быть целым ≥ 1');
                 return;
@@ -254,7 +387,7 @@
             }
         });
 
-        // Инициализация (на случай, если форма уже заполнена)
+        // Инициализация
         updatePeopleInfo();
     </script>
 </body>
