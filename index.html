@@ -1,361 +1,116 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <style>
-        /* Темы */
-        :root {
-            --bg: #121212;
-            --card-bg: #1e1e1e;
-            --text: #e0e0e0;
-            --text-muted: #a0a0a0;
-            --border: #333;
-            --accent: #4a90e2;
-            --accent-hover: #5aa0f0;
-            --error-bg: #3a1a1a;
-            --error-text: #f88;
-            --input-bg: #2a2a2a;
-            --input-border: #444;
-            --input-focus: #5a9;
-        }
+<script>
+const FIXED_PAIR = ['Г Ярослав О', 'Г Ксения А'];
 
-        .light-theme {
-            --bg: #f8f9fa;
-            --card-bg: #ffffff;
-            --text: #212529;
-            --text-muted: #6c757d;
-            --border: #dee2e6;
-            --accent: #0d6efd;
-            --accent-hover: #0b5ed7;
-            --error-bg: #f8d7da;
-            --error-text: #d63333;
-            --input-bg: #ffffff;
-            --input-border: #ced4da;
-            --input-focus: #86b7fe;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            padding: 0;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            font-size: 2.2rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .theme-toggle {
-            position: absolute;
-            top: 1.2rem;
-            right: 1.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            width: 44px;
-            height: 24px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            padding: 2px;
-            transition: background 0.3s;
-        }
-
-        .theme-toggle::before {
-            content: '';
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: white;
-            transition: transform 0.3s;
-            transform: translateX(0);
-        }
-
-        .theme-toggle.light::before {
-            transform: translateX(20px);
-        }
-
-        .theme-toggle.light {
-            background: var(--accent);
-        }
-
-        .form {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-            margin-bottom: 2rem;
-            border: 1px solid var(--border);
-        }
-
-        .form-group {
-            margin-bottom: 1.2rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--input-border);
-            border-radius: 8px;
-            background: var(--input-bg);
-            color: var(--text);
-            font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-        }
-
-        .instructions {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 0.3rem;
-        }
-
-        .instructions code {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.1rem 0.3rem;
-            border-radius: 4px;
-            font-family: monospace;
-        }
-
-        button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.85rem 1.5rem;
-            font-size: 1.05rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        button:hover {
-            background: var(--accent-hover);
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-
-        .error {
-            background: var(--error-bg);
-            color: var(--error-text);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
-
-        .teams {
-            margin-top: 1.5rem;
-        }
-
-        .teams h2 {
-            text-align: center;
-            margin-bottom: 1.2rem;
-            color: var(--text);
-        }
-
-        .team {
-            background: var(--card-bg);
-            border-left: 4px solid var(--accent);
-            padding: 1.1rem;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-            border: 1px solid var(--border);
-        }
-
-        .team strong {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: var(--accent);
-            font-size: 1.15rem;
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 2rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-
-        @media (max-width: 600px) {
-            .container { padding: 1rem; }
-            h1 { font-size: 1.8rem; }
-            .theme-toggle { top: 1rem; right: 1rem; }
-        }
-    </style>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👥 Распределение на команды</title>
-    <style>
-        /* ... тот же CSS из тёмной темы выше (без Flask-специфики) ... */
-        /* Можно скопировать стиль из предыдущего ответа — он полностью клиентский */
-    </style>
-</head>
-<body>
-    <div class="theme-toggle" id="themeToggle" title="Сменить тему"></div>
-    <div class="container">
-        <header><h1>👥 Распределение на команды</h1></header>
-
-        <div class="form">
-            <div class="form-group">
-                <label for="teams_count">🔢 Количество команд:</label>
-                <input type="number" id="teams_count" min="1" value="3">
-            </div>
-
-            <div class="form-group">
-                <label for="absent">🚫 Отсутствующие (через запятую):</label>
-                <input type="text" id="absent" placeholder="А Алексей А, Д Иван Д">
-                <div class="instructions">Пример: <code>А Алексей А, С Даниил С</code></div>
-            </div>
-
-            <div class="form-group">
-                <label>📚 Предмет:</label>
-                <div>География</div>
-            </div>
-
-            <button id="generate">✨ Сформировать команды</button>
-        </div>
-
-        <div id="result"></div>
-
-        <footer>&copy; <span id="year"></span> • Uchitelnik</footer>
-    </div>
-
-    <script>
-        // Данные — как в вашем Python-коде
-        const STUDENTS = [
-            'А Альфина А.', 'А Милана А', 'А Ева Э', 'А Алексей А',
-            'Б Дмитрий Д', 'В Мирра П', 'Г Ярослав О, Г Ксения А',
-            'Д Иван Д', 'Д Надежда И', 'Ж Лаврентий А', 'З Валерия А',
-            'К Андрей Н', 'Филип О. К', 'К Ярослав Д', 'П Дарья И',
-            'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
+const SUBJECTS_DATA = {
+    geo: {
+        name: 'География',
+        people: [
+            'А Альфина А.', 'А Милана А', 'А Ева Э', 'А Алексей А', 'Б Дмитрий Д',
+            'В Мирра П', 'Г Ярослав О', 'Г Ксения А', 'Д Иван Д', 'Д Надежда И',
+            'Ж Лаврентий А', 'З Валерия А', 'К Андрей Н', 'Филип О. К', 'К Ярослав Д',
+            'П Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
             'С Роман С', 'С Федор М', 'Ю Дарья И', 'Я Матвей В'
-        ];
+        ],
+        fixedPairs: [FIXED_PAIR]
+    }
+};
 
-        // Функция перемешивания (Fisher-Yates)
-        function shuffle(array) {
-            const arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
+    const peopleSet = new Set(people);
+    const teams = Array.from({ length: teamsCount }, () => []);
+    const remaining = [...people];
+
+    // Обработка фиксированных пар
+    for (const [a, b] of fixedPairs) {
+        if (peopleSet.has(a) && peopleSet.has(b)) {
+            const minTeamIdx = teams.reduce((minIdx, team, idx) =>
+                team.length < teams[minIdx].length ? idx : minIdx, 0);
+            teams[minTeamIdx].push(a, b);
+            const aIndex = remaining.indexOf(a);
+            const bIndex = remaining.indexOf(b);
+            if (aIndex !== -1) remaining.splice(aIndex, 1);
+            if (bIndex !== -1) remaining.splice(bIndex - (aIndex < bIndex ? 1 : 0), 1);
         }
+    }
 
-        // Генерация команд
-        function distributeToTeams(students, teamsCount) {
-            const teams = Array.from({ length: teamsCount }, () => []);
-            for (let i = 0; i < students.length; i++) {
-                teams[i % teamsCount].push(students[i]);
-            }
-            return teams;
-        }
+    // Перемешиваем и распределяем остальных
+    shuffle(remaining);
+    remaining.forEach(person => {
+        const minTeamIdx = teams.reduce((minIdx, team, idx) =>
+            team.length < teams[minIdx].length ? idx : minIdx, 0);
+        teams[minTeamIdx].push(person);
+    });
 
-        // Отображение
-        function renderTeams(teams) {
-            if (teams.length === 0) return '<p>Нет данных для отображения.</p>';
+    return teams;
+}
 
-            return `
-                <div class="teams">
-                    <h2>✅ Сформированные команды</h2>
-                    ${teams.map((team, i) => `
-                        <div class="team">
-                            <strong>Команда ${i + 1} (${team.length} чел.)</strong><br>
-                            ${team.join(', ')}
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
+function generateTeams(e) {
+    e.preventDefault();
 
-        // Обработчик кнопки
-        document.getElementById('generate').addEventListener('click', () => {
-            const teamsCount = parseInt(document.getElementById('teams_count').value) || 3;
-            const absentStr = document.getElementById('absent').value || '';
-            const absent = absentStr.split(',').map(s => s.trim()).filter(s => s);
+    const subjectKey = document.getElementById('subject').value;
+    const teamsCount = parseInt(document.getElementById('teams_count').value) || 3;
+    const absentInput = document.getElementById('absent').value;
 
-            if (teamsCount < 1) {
-                document.getElementById('result').innerHTML =
-                    '<div class="error">❌ Количество команд должно быть ≥ 1</div>';
-                return;
-            }
+    const subject = SUBJECTS_DATA[subjectKey];
+    if (!subject) {
+        showError("Неизвестный предмет");
+        return;
+    }
 
-            const available = STUDENTS.filter(s => !absent.includes(s));
+    const allPeople = subject.people;
+    const absentList = absentInput.split(',').map(s => s.trim()).filter(s => s);
+    const available = allPeople.filter(p => !absentList.includes(p));
 
-            if (available.length === 0) {
-                document.getElementById('result').innerHTML =
-                    '<div class="error">❌ Все ученики отсутствуют!</div>';
-                return;
-            }
+    if (available.length === 0) {
+        showError("Некого делить — все отсутствуют.");
+        return;
+    }
+    if (teamsCount > available.length) {
+        showError(`Нельзя создать ${teamsCount} команд из ${available.length} человек.`);
+        return;
+    }
 
-            const shuffled = shuffle(available);
-            const teams = distributeToTeams(shuffled, teamsCount);
-            document.getElementById('result').innerHTML = renderTeams(teams);
-        });
+    const teams = divideIntoTeamsWithPairs(available, teamsCount, subject.fixedPairs);
+    renderTeams(teams, subject.name);
+    hideError();
+}
 
-        // Тема и год
-        document.getElementById('year').textContent = new Date().getFullYear();
+function renderTeams(teams, subjectName) {
+    const container = document.getElementById('results');
+    container.innerHTML = `
+        <h2>✅ Команды по предмету: <em>${subjectName}</em></h2>
+        ${teams.map((team, i) => `
+            <div class="team">
+                <strong>🔹 Команда ${i + 1} (${team.length}):</strong><br>
+                ${team.join(', ')}
+            </div>
+        `).join('')}
+    `;
+}
 
-        // Тема (как раньше)
-        document.addEventListener('DOMContentLoaded', () => {
-            const toggle = document.getElementById('themeToggle');
-            const body = document.body;
-            const saved = localStorage.getItem('theme') ||
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+function showError(msg) {
+    document.getElementById('error').textContent = msg;
+    document.getElementById('error').style.display = 'block';
+}
 
-            if (saved === 'light') {
-                body.classList.add('light-theme');
-                toggle.classList.add('light');
-            }
+function hideError() {
+    document.getElementById('error').style.display = 'none';
+}
 
-            toggle.addEventListener('click', () => {
-                body.classList.toggle('light-theme');
-                toggle.classList.toggle('light');
-                localStorage.setItem('theme', body.classList.contains('light-theme') ? 'light' : 'dark');
-            });
-        });
-    </script>
-
-    <!-- Вставьте CSS из предыдущего ответа здесь (внутрь <style> выше) -->
-    <!-- или вынесите в отдельный файл style.css -->
-</style>
-</body>
-</html>
+// Автоподгрузка списка людей при смене предмета
+document.getElementById('subject').addEventListener('change', function() {
+    const subject = SUBJECTS_DATA[this.value];
+    document.querySelector('.info-box').innerHTML = `
+        <span class="subject-title">${subject.name}:</span>
+        ${subject.people.join(', ')}
+    `;
+});
+</script>
