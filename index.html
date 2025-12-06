@@ -6,7 +6,6 @@
     <title>🎓 Разделить класс на команды</title>
     <style>
         :root {
-            /* Светлая тема — значения по умолчанию */
             --bg-body: #f9f9fb;
             --bg-container: #ffffff;
             --text-primary: #2c3e50;
@@ -26,7 +25,6 @@
         }
 
         .dark-theme {
-            /* Тёмная тема */
             --bg-body: #121212;
             --bg-container: #1e1e1e;
             --text-primary: #f0f0f0;
@@ -149,7 +147,6 @@
             margin-top: 30px;
         }
 
-        /* Кнопка переключения темы */
         .theme-toggle {
             position: absolute;
             top: 20px;
@@ -180,7 +177,6 @@
     </style>
 </head>
 <body>
-    <!-- Кнопка переключения темы -->
     <button id="themeToggle" class="theme-toggle" aria-label="Переключить тему">
         🌞
     </button>
@@ -214,18 +210,13 @@
     </div>
 
     <script>
-        // === Настройка темы ===
+        // === Тема ===
         const themeToggle = document.getElementById('themeToggle');
         const body = document.body;
-
-        // Проверяем системную настройку
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        // Или сохранённую тему
         const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
         let currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
 
-        // Применяем тему
         function applyTheme(theme) {
             if (theme === 'dark') {
                 body.classList.add('dark-theme');
@@ -237,27 +228,35 @@
                 localStorage.setItem('theme', 'light');
             }
         }
-
         applyTheme(currentTheme);
-
-        // Переключение по клику
         themeToggle.addEventListener('click', () => {
             currentTheme = currentTheme === 'light' ? 'dark' : 'light';
             applyTheme(currentTheme);
         });
-
-        // Отслеживание системной темы (динамически)
         if (window.matchMedia) {
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-                if (!localStorage.getItem('theme')) { // только если пользователь не задал вручную
-                    applyTheme(e.matches ? 'dark' : 'light');
-                }
+                if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light');
             });
         }
 
-        // === Логика приложения ===
-        const FIXED_PAIR = ['Г Ярослав О', 'Г Ксения А'];
+        // === Вспомогательные функции ===
+        // Перемешивает массив *на месте* (in-place)
+        function shuffleArrayInPlace(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+        }
 
+        // Копия с перемешиванием
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            shuffleArrayInPlace(copy);
+            return copy;
+        }
+
+        // === Данные ===
+        const FIXED_PAIR = ['Г Ярослав О', 'Г Ксения А'];
         const SUBJECTS_DATA = {
             geo: {
                 name: 'География',
@@ -272,56 +271,55 @@
             }
         };
 
-        function shuffle(array) {
-            const arr = [...array];
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
-
+        // === Основная логика распределения ===
         function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
             const peopleSet = new Set(people);
             const teams = Array.from({ length: teamsCount }, () => []);
-            const remaining = [...people];
+            let remaining = [...people]; // будем мутировать
 
-            for (const pair of fixedPairs) {
-                const [a, b] = pair;
+            // 1. Обрабатываем фиксированные пары: добавляем ОБОИХ в одну команду (минимальную)
+            for (const [a, b] of fixedPairs) {
                 if (peopleSet.has(a) && peopleSet.has(b)) {
                     const minTeamIdx = teams.reduce((minIdx, team, idx) =>
                         team.length < teams[minIdx].length ? idx : minIdx, 0);
+
+                    // Добавляем пару в команду
                     teams[minTeamIdx].push(a, b);
-                    const aIndex = remaining.indexOf(a);
-                    const bIndex = remaining.indexOf(b);
-                    if (aIndex !== -1) remaining.splice(aIndex, 1);
-                    if (bIndex !== -1) remaining.splice(bIndex - (aIndex < bIndex ? 1 : 0), 1);
+
+                    // Удаляем из оставшихся
+                    remaining = remaining.filter(p => p !== a && p !== b);
                 }
             }
 
-            const shuffledRemaining = shuffle(remaining);
-            shuffledRemaining.forEach(person => {
+            // 2. Перемешиваем оставшихся и распределяем по принципу "в самую короткую команду"
+            const shuffledRemaining = shuffleArray(remaining);
+            for (const person of shuffledRemaining) {
                 const minTeamIdx = teams.reduce((minIdx, team, idx) =>
                     team.length < teams[minIdx].length ? idx : minIdx, 0);
                 teams[minTeamIdx].push(person);
-            });
+            }
+
+            // 🔥 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ:
+            // Перемешиваем КАЖДУЮ команду внутри себя —
+            // чтобы фиксированные участники не стояли подряд!
+            for (let i = 0; i < teams.length; i++) {
+                shuffleArrayInPlace(teams[i]);
+            }
 
             return teams;
         }
 
+        // === UI ===
         function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = `⚠️ Ошибка: ${message}`;
-            errorDiv.style.display = 'block';
+            const el = document.getElementById('error');
+            el.textContent = `⚠️ Ошибка: ${message}`;
+            el.style.display = 'block';
         }
-
         function hideError() {
             document.getElementById('error').style.display = 'none';
         }
-
         function renderTeams(teams, subjectName) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `
+            document.getElementById('results').innerHTML = `
                 <h2>✅ Команды по предмету: <em>${subjectName}</em></h2>
                 ${teams.map((team, i) => `
                     <div class="team">
@@ -331,63 +329,39 @@
                 `).join('')}
             `;
         }
-
         function updatePeopleInfo() {
-            const subjectKey = document.getElementById('subject').value;
-            const subject = SUBJECTS_DATA[subjectKey];
-            const infoBox = document.getElementById('peopleInfo');
-            infoBox.innerHTML = `
-                <span class="subject-title">${subject.name}:</span>
-                ${subject.people.join(', ')}
-            `;
+            const subj = SUBJECTS_DATA[document.getElementById('subject').value];
+            document.getElementById('peopleInfo').innerHTML =
+                `<span class="subject-title">${subj.name}:</span> ${subj.people.join(', ')}`;
         }
 
         document.getElementById('subject').addEventListener('change', updatePeopleInfo);
-
-        document.getElementById('teamForm').addEventListener('submit', function(e) {
+        document.getElementById('teamForm').addEventListener('submit', e => {
             e.preventDefault();
             hideError();
 
             const subjectKey = document.getElementById('subject').value;
-            let teamsCount = parseInt(document.getElementById('teams_count').value);
+            const teamsCount = parseInt(document.getElementById('teams_count').value);
             const absentInput = document.getElementById('absent').value.trim();
 
-            if (isNaN(teamsCount) || teamsCount < 1) {
-                showError('Число команд должно быть целым ≥ 1');
-                return;
-            }
-
+            if (isNaN(teamsCount) || teamsCount < 1) return showError('Число команд должно быть ≥ 1');
             const subject = SUBJECTS_DATA[subjectKey];
-            if (!subject) {
-                showError('Неизвестный предмет');
-                return;
-            }
+            if (!subject) return showError('Неизвестный предмет');
 
-            const allPeople = subject.people;
-            const absentList = absentInput ?
-                absentInput.split(',').map(s => s.trim()).filter(s => s) : [];
+            const absentList = absentInput ? absentInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const available = subject.people.filter(p => !absentList.includes(p));
 
-            const available = allPeople.filter(p => !absentList.includes(p));
-
-            if (available.length === 0) {
-                showError('Некого делить — все отсутствуют.');
-                return;
-            }
-
-            if (teamsCount > available.length) {
-                showError(`Нельзя создать ${teamsCount} команд из ${available.length} человек.`);
-                return;
-            }
+            if (available.length === 0) return showError('Некого делить — все отсутствуют.');
+            if (teamsCount > available.length) return showError(`Нельзя создать ${teamsCount} команд из ${available.length} человек.`);
 
             try {
                 const teams = divideIntoTeamsWithPairs(available, teamsCount, subject.fixedPairs);
                 renderTeams(teams, subject.name);
             } catch (err) {
-                showError('Ошибка при генерации команд: ' + err.message);
+                showError('Ошибка: ' + err.message);
             }
         });
 
-        // Инициализация
         updatePeopleInfo();
     </script>
 </body>
