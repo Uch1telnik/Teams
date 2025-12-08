@@ -240,15 +240,12 @@
         }
 
         // === Вспомогательные функции ===
-        // Перемешивает массив *на месте* (in-place)
         function shuffleArrayInPlace(arr) {
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [arr[i], arr[j]] = [arr[j], arr[i]];
             }
         }
-
-        // Копия с перемешиванием
         function shuffleArray(arr) {
             const copy = [...arr];
             shuffleArrayInPlace(copy);
@@ -271,39 +268,42 @@
             }
         };
 
-        // === Основная логика распределения ===
+        // 🔥 КЛЮЧЕВОЕ УЛУЧШЕНИЕ: случайный выбор среди команд минимальной длины
+        function getRandomMinTeamIndex(teams) {
+            // Находим минимальную длину
+            const minLength = Math.min(...teams.map(t => t.length));
+            // Собираем индексы команд с этой длиной
+            const minIndices = teams.map((t, i) => t.length === minLength ? i : -1).filter(i => i !== -1);
+            // Выбираем случайный индекс из них
+            return minIndices[Math.floor(Math.random() * minIndices.length)];
+        }
+
         function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
             const peopleSet = new Set(people);
             const teams = Array.from({ length: teamsCount }, () => []);
-            let remaining = [...people]; // будем мутировать
+            let remaining = [...people];
 
-            // 1. Обрабатываем фиксированные пары: добавляем ОБОИХ в одну команду (минимальную)
+            // 1. Обрабатываем фиксированные пары
             for (const [a, b] of fixedPairs) {
                 if (peopleSet.has(a) && peopleSet.has(b)) {
-                    const minTeamIdx = teams.reduce((minIdx, team, idx) =>
-                        team.length < teams[minIdx].length ? idx : minIdx, 0);
-
-                    // Добавляем пару в команду
-                    teams[minTeamIdx].push(a, b);
-
-                    // Удаляем из оставшихся
+                    // ✅ Вместо: minTeamIdx = teams.reduce(...) →
+                    // ✅ Используем случайный выбор среди команд минимальной длины
+                    const teamIdx = getRandomMinTeamIndex(teams);
+                    teams[teamIdx].push(a, b);
                     remaining = remaining.filter(p => p !== a && p !== b);
                 }
             }
 
-            // 2. Перемешиваем оставшихся и распределяем по принципу "в самую короткую команду"
+            // 2. Распределяем остальных (в случайную минимальную команду)
             const shuffledRemaining = shuffleArray(remaining);
             for (const person of shuffledRemaining) {
-                const minTeamIdx = teams.reduce((minIdx, team, idx) =>
-                    team.length < teams[minIdx].length ? idx : minIdx, 0);
-                teams[minTeamIdx].push(person);
+                const teamIdx = getRandomMinTeamIndex(teams);
+                teams[teamIdx].push(person);
             }
 
-            // 🔥 КЛЮЧЕВОЕ ИЗМЕНЕНИЕ:
-            // Перемешиваем КАЖДУЮ команду внутри себя —
-            // чтобы фиксированные участники не стояли подряд!
-            for (let i = 0; i < teams.length; i++) {
-                shuffleArrayInPlace(teams[i]);
+            // 3. Перемешиваем каждую команду внутри — чтобы фиксированные не стояли подряд
+            for (const team of teams) {
+                shuffleArrayInPlace(team);
             }
 
             return teams;
