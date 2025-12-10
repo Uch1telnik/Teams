@@ -253,7 +253,6 @@
         }
 
         // === Данные ===
-        const FIXED_PAIR = [];
         const SUBJECTS_DATA = {
             geo: {
                 name: 'География',
@@ -264,7 +263,6 @@
                     'П Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
                     'С Роман С', 'С Федор М', 'Ю Дарья И', 'Я Матвей В'
                 ],
-                fixedPairs: [FIXED_PAIR]
             }
         };
 
@@ -278,30 +276,20 @@
             return minIndices[Math.floor(Math.random() * minIndices.length)];
         }
 
-        function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
+        function divideIntoTeamsWithPairs(people, teamsCount) {
             const peopleSet = new Set(people);
             const teams = Array.from({ length: teamsCount }, () => []);
             let remaining = [...people];
 
-            // 1. Обрабатываем фиксированные пары
-            for (const [a, b] of fixedPairs) {
-                if (peopleSet.has(a) && peopleSet.has(b)) {
-                    // ✅ Вместо: minTeamIdx = teams.reduce(...) →
-                    // ✅ Используем случайный выбор среди команд минимальной длины
-                    const teamIdx = getRandomMinTeamIndex(teams);
-                    teams[teamIdx].push(a, b);
-                    remaining = remaining.filter(p => p !== a && p !== b);
-                }
-            }
 
-            // 2. Распределяем остальных (в случайную минимальную команду)
+            // Распределяем (в случайную минимальную команду)
             const shuffledRemaining = shuffleArray(remaining);
             for (const person of shuffledRemaining) {
                 const teamIdx = getRandomMinTeamIndex(teams);
                 teams[teamIdx].push(person);
             }
 
-            // 3. Перемешиваем каждую команду внутри — чтобы фиксированные не стояли подряд
+            // Перемешиваем каждую команду внутри — чтобы фиксированные не стояли подряд
             for (const team of teams) {
                 shuffleArrayInPlace(team);
             }
@@ -355,7 +343,7 @@
             if (teamsCount > available.length) return showError(`Нельзя создать ${teamsCount} команд из ${available.length} человек.`);
 
             try {
-                const teams = divideIntoTeamsWithPairs(available, teamsCount, subject.fixedPairs);
+                const teams = divideIntoTeamsWithPairs(available, teamsCount);
                 renderTeams(teams, subject.name);
             } catch (err) {
                 showError('Ошибка: ' + err.message);
