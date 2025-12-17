@@ -14,6 +14,8 @@
             --shadow: 0 4px 12px rgba(0,0,0,0.08);
             --btn-bg: #3498db;
             --btn-hover: #2980b9;
+            --btn-secondary: #95a5a6;
+            --btn-secondary-hover: #7f8c8d;
             --team-bg: #e3f2fd;
             --team-border: #2196f3;
             --error-bg: #fdf2f2;
@@ -39,6 +41,8 @@
             --shadow: 0 4px 12px rgba(0,0,0,0.3);
             --btn-bg: #1e88e5;
             --btn-hover: #1565c0;
+            --btn-secondary: #607d8b;
+            --btn-secondary-hover: #455a64;
             --team-bg: #1e3a5f;
             --team-border: #4fc3f7;
             --error-bg: #3d2323;
@@ -104,18 +108,25 @@
         button {
             background: var(--btn-bg);
             color: white;
-            padding: 12px 24px;
+            padding: 10px 16px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
-            margin-top: 20px;
             transition: background 0.3s;
         }
 
         button:hover {
             background: var(--btn-hover);
+        }
+
+        .btn-secondary {
+            background: var(--btn-secondary);
+            margin-left: 8px;
+        }
+        .btn-secondary:hover {
+            background: var(--btn-secondary-hover);
         }
 
         .team {
@@ -228,7 +239,7 @@
             background-color: var(--checkbox-bg);
             border: 1px solid var(--checkbox-border);
             border-radius: 4px;
-            accent-color: var(--checkbox-checked-bg); /* для modern браузеров */
+            accent-color: var(--checkbox-checked-bg);
         }
 
         .absent-item label {
@@ -238,13 +249,27 @@
             user-select: none;
         }
 
-        /* Search */
+        /* Поиск и кнопки управления — исправлено */
+        .search-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
         .search-box {
-            margin-top: 10px;
             position: relative;
+            width: 100%;
         }
         .search-box input {
-            padding-left: 32px;
+            width: 100%;
+            padding: 10px 10px 10px 32px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: var(--select-bg);
+            color: var(--text-primary);
         }
         .search-icon {
             position: absolute;
@@ -254,10 +279,28 @@
             color: #888;
         }
 
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
         @media (max-width: 600px) {
             .container { padding: 15px; }
             h1 { font-size: 1.8rem; }
             .absent-items { grid-template-columns: 1fr; }
+            .control-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            .control-buttons button {
+                width: 100%;
+                margin-left: 0 !important;
+            }
+            .search-box input {
+                padding: 10px 10px 10px 32px;
+            }
         }
     </style>
 </head>
@@ -278,15 +321,24 @@
             <label for="teams_count">🔢 Число команд:</label>
             <input type="number" id="teams_count" name="teams_count" value="3" min="1" required>
 
-            <label for="absentSearch">🔍 Поиск по имени (опционально):</label>
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="absentSearch" placeholder="Начните вводить имя...">
+            <label>❌ Отметьте отсутствующих:</label>
+
+            <!-- 🔧 Исправлено: поиск и кнопки теперь в одном блоке -->
+            <div class="search-controls">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="absentSearch" placeholder="Начните вводить имя...">
+                </div>
+                <button type="button" id="resetSearch" class="btn-secondary">Сбросить поиск</button>
             </div>
 
-            <label>❌ Отметьте отсутствующих:</label>
             <div class="absent-list" id="absentList">
-                <!-- Чекбоксы будут здесь -->
+                <!-- Чекбоксы -->
+            </div>
+
+            <div class="control-buttons">
+                <button type="button" id="selectAll" class="btn-secondary">Выбрать всех</button>
+                <button type="button" id="clearAll" class="btn-secondary">Очистить всех</button>
             </div>
 
             <button type="submit">Разделить на команды</button>
@@ -375,7 +427,7 @@
             geo: {
                 name: 'География',
                 people: [
-                    'А Альфина А.', 'А Милана А', 'А Ева Э', 'А Алексей А', 'Б Дмитрий Д',
+                    'А Альфина А', 'А Милана А', 'А Ева Э', 'А Алексей А', 'Б Дмитрий Д',
                     'В Мирра П', 'Г Ярослав О', 'Г Ксения А', 'Д Иван Д', 'Д Надежда И',
                     'Ж Лаврентий А', 'З Валерия А', 'К Андрей Н', 'Филип О. К', 'К Ярослав Д',
                     'Л Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
@@ -384,7 +436,7 @@
             }
         };
 
-        // Группировка по первой букве фамилии (первая буква строки)
+        // Группировка по первой букве
         function groupPeopleByFirstLetter(people) {
             const groups = {};
             people.forEach(name => {
@@ -398,7 +450,7 @@
             }));
         }
 
-        // === Генерация чекбоксов ===
+        // === Рендер чекбоксов ===
         function renderAbsentCheckboxes(subjectKey) {
             const subject = SUBJECTS_DATA[subjectKey];
             const container = document.getElementById('absentList');
@@ -421,27 +473,42 @@
             });
             container.innerHTML = html;
 
-            // Подключаем поиск
             setupSearchFilter();
         }
 
+        // 🔥 Улучшенный поиск (регистронезависимый)
         function setupSearchFilter() {
             const searchInput = document.getElementById('absentSearch');
-            const checkboxes = document.querySelectorAll('#absentList input[type="checkbox"]');
-            const labels = document.querySelectorAll('#absentList label');
+            const items = document.querySelectorAll('.absent-item');
+            const labels = Array.from(items).map(item => item.querySelector('label'));
 
             searchInput.addEventListener('input', () => {
                 const query = searchInput.value.trim().toLowerCase();
-                checkboxes.forEach((cb, i) => {
-                    const label = labels[i];
-                    const name = label.textContent.toLowerCase();
-                    const isVisible = name.includes(query);
-                    cb.parentElement.style.display = isVisible ? 'flex' : 'none';
+                items.forEach((item, i) => {
+                    const name = labels[i].textContent.toLowerCase();
+                    item.style.display = name.includes(query) ? 'flex' : 'none';
                 });
             });
         }
 
-        function divideIntoTeamsWithPairs(people, teamsCount) {
+        // === Кнопки управления ===
+        function selectAllAbsent() {
+            const checkboxes = document.querySelectorAll('#absentList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+
+        function clearAllAbsent() {
+            const checkboxes = document.querySelectorAll('#absentList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        function resetSearch() {
+            document.getElementById('absentSearch').value = '';
+            document.getElementById('absentSearch').dispatchEvent(new Event('input'));
+        }
+
+        // === Логика распределения ===
+        function divideIntoTeamsWithPairs(people, teamsCount,) {
             const peopleSet = new Set(people);
             const teams = Array.from({ length: teamsCount }, () => []);
             let remaining = [...people];
@@ -485,13 +552,20 @@
             `;
         }
 
-        // Инициализация
+        // === Инициализация ===
         renderAbsentCheckboxes('geo');
 
+        // Обработчики кнопок
+        document.getElementById('selectAll').addEventListener('click', selectAllAbsent);
+        document.getElementById('clearAll').addEventListener('click', clearAllAbsent);
+        document.getElementById('resetSearch').addEventListener('click', resetSearch);
+
+        // Смена предмета
         document.getElementById('subject').addEventListener('change', function() {
             renderAbsentCheckboxes(this.value);
         });
 
+        // Отправка формы
         document.getElementById('teamForm').addEventListener('submit', e => {
             e.preventDefault();
             hideMessages();
@@ -503,7 +577,6 @@
             const subject = SUBJECTS_DATA[subjectKey];
             if (!subject) return showError('Неизвестный предмет');
 
-            // 🔥 Сбор отсутствующих через чекбоксы
             const checkedBoxes = document.querySelectorAll('#absentList input[type="checkbox"]:checked');
             const absentList = Array.from(checkedBoxes).map(cb => cb.value);
             const available = subject.people.filter(p => !absentList.includes(p));
