@@ -71,6 +71,8 @@ function getRandomMinTeamIndex(teams) {
 }
 
 // === Данные ===
+const FIXED_PAIR_GEO = ['Г Ярослав О', 'Г Ксения А'];
+
 const SUBJECTS_DATA = {
     geo: {
         name: 'География',
@@ -81,14 +83,24 @@ const SUBJECTS_DATA = {
             'Л Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
             'С Роман С', 'С Федор М', 'Ю Дарья И', 'Я Матвей В'
         ],
+        fixedPairs: [FIXED_PAIR_GEO]
     },
     alg: {
         name: 'Алгебра',
         people: [
             'Лёша', 'Ярослав Г.', 'Ксюша', 'Ваня', 'Ярослав К.',
             'Даша', 'Настя', 'Костя', 'Даня', 'Рома', 'Федя', 'Вова',
-            'Ярослав Ш.', 'Матвей'
+            'Ярослав Ш.', 'Матвей', 'Богдан'
         ],
+        fixedPairs: [['Ярослав Г.', 'Ксюша']]
+    },
+    eng: {
+        name: 'Английский язык',
+        people: [
+            'А Аксинья С', 'Г Ярослав О', 'Д Александра Е', 'З Валерия А',
+            'Н Анна А', 'П Алексей А', 'П Иван А', 'Ф Варвара С', 'Ф Эмин Д', 'Ч Платон М'
+        ],
+        fixedPairs: []
     }
 };
 
@@ -164,10 +176,18 @@ function resetSearch() {
 }
 
 // === Логика распределения ===
-function divideIntoTeamsWithPairs(people, teamsCount) {
+function divideIntoTeamsWithPairs(people, teamsCount, fixedPairs) {
     const peopleSet = new Set(people);
     const teams = Array.from({ length: teamsCount }, () => []);
     let remaining = [...people];
+
+    for (const [a, b] of fixedPairs) {
+        if (peopleSet.has(a) && peopleSet.has(b)) {
+            const teamIdx = getRandomMinTeamIndex(teams);
+            teams[teamIdx].push(a, b);
+            remaining = remaining.filter(p => p !== a && p !== b);
+        }
+    }
 
     const shuffledRemaining = shuffleArray(remaining);
     for (const person of shuffledRemaining) {
@@ -254,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (teamsCount > availableCount) return showError(`Нельзя создать ${teamsCount} команд из ${availableCount} человек.`);
 
         try {
-            const teams = divideIntoTeamsWithPairs(available, teamsCount);
+            const teams = divideIntoTeamsWithPairs(available, teamsCount, subject.fixedPairs);
             if (teams.some(t => t.length === 0)) {
                 throw new Error('Обнаружена пустая команда. Попробуйте уменьшить число команд.');
             }
