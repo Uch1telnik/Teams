@@ -71,7 +71,7 @@ function getRandomMinTeamIndex(teams) {
 }
 
 // === Данные ===
-const FIXED_PAIR_GEO = ['Г Ярослав О', 'Г Ксения А'];
+
 
 const SUBJECTS_DATA = {
     geo: {
@@ -83,7 +83,7 @@ const SUBJECTS_DATA = {
             'Л Дарья И', 'М Анастасия С', 'О Павел И', 'С Александр Ю', 'С Даниил С',
             'С Роман С', 'С Федор М', 'Ю Дарья И', 'Я Матвей В'
         ],
-        fixedPairs: [FIXED_PAIR_GEO]
+        fixedPairs: []
     },
     alg: {
         name: 'Алгебра',
@@ -92,7 +92,7 @@ const SUBJECTS_DATA = {
             'Настя', 'Костя', 'Даня', 'Рома', 'Федя', 'Вова',
             'Ярослав Ш.', 'Матвей', 'Богдан'
         ],
-        fixedPairs: [['Ярослав Г.', 'Ксюша']]
+        fixedPairs: []
     },
     eng: {
         name: 'Английский язык',
